@@ -16,6 +16,7 @@
  */
 package spark;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -55,6 +56,8 @@ public class Request {
     private Set<String> headers = null;
     
     private Session session = null;
+    
+    private List<Cookie> cookies = null;
     
     //    request.body              # request body sent by the client (see below), DONE
     //    request.scheme            # "http"                                DONE
@@ -332,4 +335,49 @@ public class Request {
     public void session(String name, Object value) {
         session().attribute(name, value);
     }
+    
+    /**
+     * Retrieve a cookie using its name.
+     * Refers to {@link Response#cookie(String, String)} to create a new one.
+     * @param name name of the cookie
+     * @return the first corresponding cookie or <code>null</code> if none match the given name
+     * @see Response#cookie(String, String)
+     */
+    public Cookie cookie(String name) {
+        javax.servlet.http.Cookie[] cookies = servletRequest.getCookies();
+        if(cookies != null) {
+            for(javax.servlet.http.Cookie cookie : cookies) {
+                if(name.equals(cookie.getName()))
+                    return new Cookie(cookie);
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * Returns an unmodifiable list containing all of the Cookie objects the client sent with this request. 
+     * This method returns an empty list if no cookies were sent.
+     * 
+     * @return
+     * @see javax.servlet.http.HttpServletRequest#getCookies()
+     * @see #cookie(String)
+     */
+    public List<Cookie> cookies() {
+        if(cookies!=null)
+            return cookies;
+        
+        javax.servlet.http.Cookie[] httpCookies = servletRequest.getCookies();
+        if(httpCookies == null) {
+            this.cookies = Collections.emptyList();
+        }
+        else {
+            List<Cookie> cookies = new ArrayList<Cookie>(httpCookies.length);
+            for(javax.servlet.http.Cookie httpCookie : httpCookies) {
+                cookies.add(new Cookie(httpCookie));
+            }
+            this.cookies = Collections.unmodifiableList(cookies);
+        }
+        return this.cookies;
+    }
+    
 }

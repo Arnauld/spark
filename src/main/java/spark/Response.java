@@ -26,6 +26,8 @@ import javax.servlet.http.HttpServletResponse;
  * @author Per Wendel
  */
 public class Response {
+    
+    private org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(getClass());
 
     private HttpServletResponse response;
     private String body;
@@ -80,7 +82,7 @@ public class Response {
         try {
             response.sendRedirect(location);
         } catch (IOException e) {
-            e.printStackTrace();
+            LOG.error("Failed to redirect to <" + location + ">", e);
         }
     }
     
@@ -90,4 +92,25 @@ public class Response {
     public void header(String header, String value) {
         response.addHeader(header, value);
     }
+    
+    /**
+     * Adds the specified cookie to the response. 
+     * This method can be called multiple times to set more than one cookie.
+     */
+    public Cookie cookie(String name, String value) {
+        javax.servlet.http.Cookie cookie = new javax.servlet.http.Cookie(name, value);
+        response.addCookie(cookie);
+        return new Cookie(cookie);
+    }
+    
+    /**
+     * Tells the client to delete a cookie "now", add it to the response as above.
+     * It usually set its maximum age to zero.
+     */
+    public void deleteCookie(String name) {
+        javax.servlet.http.Cookie cookie = new javax.servlet.http.Cookie(name, "");
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);
+    }
+
 }
